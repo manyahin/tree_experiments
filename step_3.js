@@ -4,47 +4,17 @@ const { AsyncNode } = require('./step_2');
 class RemovableAsyncNode extends AsyncNode {
   constructor(...args) {
     super(...args);
-
-    this.parent = null;
-    this.readyPromises = [this.ready.promise];
   }
   removeChild(child) {
-    for (let i = 0; i < this.children.length; i++) {
-      if (Object.is(this.children[i], child)) {
-        console.log('- remove child!')
+    this.children.delete(child);
 
-        // remove parent
-        child.parent = null;
+    if (this.dependencies.has(child.ready.promise)) {
+      this.dependencies.delete(child.ready.promise);
 
-        // remove child from children
-        this.children.splice(i, 1);
-
-        // remove child from awaiting list
-        // i + 1 because readyPromises also contain the node itself at 0 index
-        this.readyPromises.splice(i + 1, 1);
+      if (this.dependencies.size === 0) {
+        this._ready();
       }
     }
-  }
-  addChild(child) {
-    this.children.push(child);
-
-    // swap children and parent
-    if (child.parent && !Object.is(child.parent, this)) {
-      console.log('- new parent!');
-
-      const previousParent = child.parent;
-      child.parent.removeChild(child);
-      child.addChild(previousParent);
-    }
-
-    child.parent = this;
-
-    this.readyPromises.push(child.whenReady(null));
-  }
-  async whenReady(callback) {
-    await Promise.all(this.readyPromises);
-
-    callback && callback();
   }
 }
 

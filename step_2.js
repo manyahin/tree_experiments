@@ -18,21 +18,49 @@ class AsyncNode extends Node {
     [this.id] = args;
 
     this.ready = new Deferred();
+    this.resourceReady = new Deferred();
+
+    this.callback = null;
+    this.dependencies = new Set();
+
+    this._addAsyncItem(this.resourceReady.promise);
   }
   onResourceReady() {
-    console.log(`- resource ready! ${this.id}`)
+    console.log(`- ${this.id} - resource ready`)
+
+    this.resourceReady.resolve();
+  }
+  addChild(child) {
+    console.log(`- add child ${child.id} to ${this.id}`)
+
+    this.children.add(child);
+
+    this._addAsyncItem(child.ready.promise);
+  }
+  _ready() {
+    console.log(`- ${this.id} - with children are ready`);
 
     this.ready.resolve();
-  }
-  async whenReady(callback) {
-    await Promise.all(
-      [
-        this.ready.promise,
-        ...this.children.map(node => node.whenReady(null))
-      ]
-    );
 
-    callback && callback();
+    this.callback && this.callback();
+  }
+  _addAsyncItem(item) {
+    this.dependencies.add(item);
+
+    item.then(res => {
+      if (this.dependencies.has(item)) {
+        this.dependencies.delete(item);
+
+        if (this.dependencies.size === 0) {
+          this._ready();
+        }
+      }
+    });
+  }
+  whenReady(callback) {
+    if (callback) {
+      this.callback = callback;
+    }
   }
 }
 

@@ -11,8 +11,16 @@ const e = new AsyncNode('e');
 c.addChild(d);
 c.addChild(e);
 
+d.whenReady(() => {
+  console.log('d is ready');
+});
+
 const f = new AsyncNode('f');
 c.addChild(f);
 a.addChild(c);
+
+c.whenReady(() => {
+  console.log('c is ready');
+});
 
 a.whenReady(() => console.log('great success!'));

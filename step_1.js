@@ -17,23 +17,23 @@ class Resource {
 class Node {
   constructor() {
     this.res = new Resource(this.onResourceReady.bind(this));
-    this.children = [];
+    this.children = new Set();
 
-    this.ready = 0;
+    this.resourceReady = 0;
   }
   onResourceReady() {
-    this.ready = 1;
+    this.resourceReady = 1;
   }
   addChild(child) {
-    this.children.push(child);
+    this.children.add(child);
   }
   isReady() {
     return Node.traverse(this);
   }
   static traverse(node) {
-    if (!node.ready) return false;
+    if (!node.resourceReady) return false;
 
-    if (node.children.length) {
+    if (node.children.size) {
       for (let child of node.children) {
         if (!Node.traverse(child))
           return false;
